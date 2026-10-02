@@ -42,3 +42,13 @@ owners:
 display_name: "CS Toolboxes"
 repo: github.com/CSMJU2030/csmju-toolboxes
 status: proposed
+
+# UI Kit กลาง — @csmju2030/design-system
+ui:
+  design_system_version: "1.3.0"
+  theme: light
+  nav:
+    - { label: "ภาพรวม", path: "/" }
+    - { label: "รายการเครื่องมือ", path: "/tools" }
+    - { label: "ประวัติการใช้งาน", path: "/tool-usages" }
+  local_components: []
