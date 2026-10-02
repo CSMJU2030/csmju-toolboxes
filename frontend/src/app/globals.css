@@ -10,6 +10,8 @@
   --color-brand-navy: #111d43;
   --color-brand-blue: #254bb5;
   --color-brand-amber: #f1b94b;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
   --font-sans: "Noto Sans Thai", "Tahoma", sans-serif;
 }
 
