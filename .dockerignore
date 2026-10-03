@@ -1,0 +1,9 @@
+.git
+.gitmodules
+**/node_modules
+**/.next
+**/dist
+**/coverage
+**/.env
+**/.env.*
+**/generated/prisma

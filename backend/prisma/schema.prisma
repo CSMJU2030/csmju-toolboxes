@@ -1,0 +1,77 @@
+// ฐานข้อมูลของ csmju-toolboxes (ห้ามต่อ core_hub)
+// อ้างผู้ใช้ด้วย core_user_id (claim sub) เท่านั้น — ไม่เก็บชื่อ อีเมล หรือไฟล์ของผู้ใช้
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ToolCategory {
+  IMAGE
+  DOCUMENT
+  OTHER
+}
+
+enum ToolUsageStatus {
+  SUCCESS
+  FAILED
+}
+
+model Tool {
+  id          String       @id @default(uuid())
+  name        String
+  description String?
+  category    ToolCategory
+  isActive    Boolean      @default(true) @map("is_active")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  usages ToolUsage[]
+  imageHistory ImageHistory[]
+
+  @@index([category])
+  @@map("tools")
+}
+
+model ToolUsage {
+  id              String          @id @default(uuid())
+  coreUserId      String          @map("core_user_id")
+  toolId          String          @map("tool_id")
+  status          ToolUsageStatus
+  inputSizeBytes  Int?            @map("input_size_bytes")
+  outputSizeBytes Int?            @map("output_size_bytes")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+
+  tool Tool @relation(fields: [toolId], references: [id])
+
+  @@index([coreUserId, createdAt])
+  @@index([toolId])
+  @@map("tool_usages")
+}
+
+model ImageHistory {
+  id                 String   @id @default(uuid())
+  coreUserId         String   @map("core_user_id")
+  toolId             String   @map("tool_id")
+  originalFilename   String   @map("original_filename")
+  originalMimeType   String   @map("original_mime_type")
+  originalSizeBytes  Int      @map("original_size_bytes")
+  originalStorageKey String   @unique @map("original_storage_key")
+  outputFilename     String   @map("output_filename")
+  outputMimeType     String   @map("output_mime_type")
+  outputSizeBytes    Int      @map("output_size_bytes")
+  outputStorageKey   String   @unique @map("output_storage_key")
+  createdAt          DateTime @default(now()) @map("created_at")
+  expiresAt          DateTime @map("expires_at")
+
+  tool Tool @relation(fields: [toolId], references: [id], onDelete: Restrict)
+
+  @@index([coreUserId, createdAt])
+  @@index([expiresAt])
+  @@map("image_history")
+}

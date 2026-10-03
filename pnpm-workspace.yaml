@@ -1,3 +1,11 @@
 packages:
   - 'frontend'
   - 'backend'
+
+# pnpm บล็อก build script ของ dependency โดยปริยาย — อนุญาตเฉพาะที่ Prisma ต้องใช้
+allowBuilds:
+  prisma: true
+  '@prisma/engines': true
+  '@parcel/watcher': false
+  unrs-resolver: false
+  '@scarf/scarf': false

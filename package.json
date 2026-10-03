@@ -1,5 +1,21 @@
 {
   "name": "csmju-toolboxes",
+  "version": "1.0.0",
   "private": true,
-  "packageManager": "pnpm@9.15.9"
+  "packageManager": "pnpm@12.3.4",
+  "scripts": {
+    "dev:backend": "pnpm --dir backend start:dev",
+    "build:backend": "pnpm --dir backend build",
+    "typecheck:backend": "pnpm --dir backend typecheck",
+    "test:backend": "pnpm --dir backend test",
+    "lint:backend": "pnpm --dir backend lint",
+    "dev:frontend": "pnpm --dir frontend dev",
+    "build:frontend": "pnpm --dir frontend build",
+    "typecheck:frontend": "pnpm --dir frontend typecheck",
+    "lint:frontend": "pnpm --dir frontend lint",
+    "lint:ui": "pnpm --dir frontend lint:ui",
+    "db:up": "docker compose --env-file .env.local up -d postgres",
+    "db:down": "docker compose --env-file .env.local stop postgres",
+    "db:logs": "docker compose --env-file .env.local logs -f postgres"
+  }
 }
