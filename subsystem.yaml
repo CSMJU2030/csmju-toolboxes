@@ -21,7 +21,6 @@ public_endpoints:
   - POST /auth/logout
 
 # conformance ใช้ probes ตรวจสัญญา API — ประกาศไม่ครบ = ขึ้น SKIP = ยังไม่ผ่าน
-# TODO: แทน "tools" ด้วยชื่อ resource จริงของ Toolboxes (พหูพจน์ kebab-case) และ field ใน invalid_body/valid_body
 probes:
   collection: /api/v1/tools
   not_found: /api/v1/tools/99999999-9999-4999-8999-999999999999
@@ -31,9 +30,11 @@ probes:
     allowed_role: staff
     denied_role: guest                # role ที่ต้องได้ 403 และมีบัญชีรหัสผ่าน (guest หรือ alumni) — student มีแต่ MJU SSO
     invalid_body:
-      someRequiredField: ""
+      name: ""
+      category: OTHER
     valid_body:
-      someRequiredField: value
+      name: "Conformance probe tool"
+      category: OTHER
 
 owners:
   pl: "@csmju2030/pl-toolboxes"

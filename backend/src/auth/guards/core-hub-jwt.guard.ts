@@ -39,7 +39,9 @@ export class CoreHubJwtGuard implements CanActivate {
     const request =
       context.switchToHttp().getRequest<AuthenticatedRequest>();
 
-    const token = this.extractBearerToken(request);
+    const token =
+      this.extractBearerToken(request) ??
+      this.extractSessionCookie(request);
 
     if (!token) {
       throw new UnauthorizedException(
@@ -77,5 +79,22 @@ export class CoreHubJwtGuard implements CanActivate {
     }
 
     return credentials;
+  }
+
+  private extractSessionCookie(request: Request): string | null {
+    const cookieHeader = request.headers.cookie;
+    if (!cookieHeader) return null;
+
+    const cookieName = `${(process.env.SUBSYSTEM_ID ?? 'csmju-toolboxes').replace(/-/g, '_')}_access_token`;
+    for (const part of cookieHeader.split(';')) {
+      const separator = part.indexOf('=');
+      if (separator < 0 || part.slice(0, separator).trim() !== cookieName) continue;
+      try {
+        return decodeURIComponent(part.slice(separator + 1).trim());
+      } catch {
+        return null;
+      }
+    }
+    return null;
   }
 }

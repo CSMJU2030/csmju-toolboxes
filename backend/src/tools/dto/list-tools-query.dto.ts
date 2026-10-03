@@ -7,6 +7,7 @@ import {
   Max,
   Min,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 
 import { ToolCategory } from '../../generated/prisma/enums';
 
@@ -16,11 +17,13 @@ export class ListToolsQueryDto {
   category?: ToolCategory;
 
   @IsOptional()
+  @Type(() => Number)
   @IsInt()
   @Min(1)
   page?: number;
 
   @IsOptional()
+  @Type(() => Number)
   @IsInt()
   @Min(1)
   @Max(100)

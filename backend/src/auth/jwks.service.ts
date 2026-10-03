@@ -3,9 +3,10 @@
 import {
   Injectable,
   Logger,
+  UnauthorizedException,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import { createRemoteJWKSet, importJWK, type JWK } from 'jose';
+import { importJWK, type JWK } from 'jose';
 
 interface JwksResponse {
   keys: JWK[];
@@ -26,11 +27,6 @@ export class JwksService {
   private cachedAt = 0;
   private lastRefreshAt = 0;
 
-  // Keep the remote JWKS resolver available for future JWT verification.
-  private readonly remoteJwks = createRemoteJWKSet(
-    new URL(this.jwksUrl),
-  );
-
   async getKey(kid: string): Promise<Awaited<ReturnType<typeof importJWK>>> {
     if (!kid) {
       throw new ServiceUnavailableException(
@@ -50,7 +46,7 @@ export class JwksService {
     if (!jwk) {
       this.logger.warn(`Unknown JWKS kid: ${kid}`);
 
-      throw new ServiceUnavailableException(
+      throw new UnauthorizedException(
         'JWKS key not found',
       );
     }

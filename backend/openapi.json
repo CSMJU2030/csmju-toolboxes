@@ -1,6 +1,67 @@
 {
   "openapi": "3.0.0",
   "paths": {
+    "/auth/login": {
+      "get": {
+        "operationId": "SsoController_login",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Sso"
+        ]
+      }
+    },
+    "/auth/callback": {
+      "get": {
+        "operationId": "SsoController_callback",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Sso"
+        ]
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "operationId": "SsoController_logout",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Sso"
+        ]
+      }
+    },
+    "/api/v1/me": {
+      "get": {
+        "operationId": "MeController_getMe",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "identity"
+        ]
+      }
+    },
     "/api/health": {
       "get": {
         "operationId": "HealthController_health",
@@ -217,7 +278,39 @@
     "/api/v1/tools": {
       "get": {
         "operationId": "ToolsController_findAll",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "category",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "IMAGE",
+                "DOCUMENT",
+                "OTHER"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Active tools ordered by creation date",
@@ -281,6 +374,34 @@
                           }
                         }
                       }
+                    },
+                    "meta": {
+                      "type": "object",
+                      "required": [
+                        "total",
+                        "page",
+                        "limit",
+                        "totalPages"
+                      ],
+                      "properties": {
+                        "total": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "page": {
+                          "type": "integer",
+                          "minimum": 1
+                        },
+                        "limit": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 100
+                        },
+                        "totalPages": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      }
                     }
                   }
                 }
@@ -330,6 +451,64 @@
           }
         ],
         "summary": "List active tools",
+        "tags": [
+          "tools"
+        ]
+      },
+      "post": {
+        "operationId": "ToolsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateToolDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Tool created"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a tool (staff or admin)",
+        "tags": [
+          "tools"
+        ]
+      }
+    },
+    "/api/v1/tools/{id}": {
+      "get": {
+        "operationId": "ToolsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Tool not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get a tool by id",
         "tags": [
           "tools"
         ]
@@ -478,6 +657,11 @@
         "type": "http"
       }
     },
-    "schemas": {}
+    "schemas": {
+      "CreateToolDto": {
+        "type": "object",
+        "properties": {}
+      }
+    }
   }
 }

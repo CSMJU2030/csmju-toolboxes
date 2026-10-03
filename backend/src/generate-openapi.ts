@@ -2,6 +2,7 @@ import { writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 import { NestFactory } from '@nestjs/core';
+import { RequestMethod } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 import { AppModule } from './app.module';
@@ -10,7 +11,13 @@ async function generateOpenApi(): Promise<void> {
   const app = await NestFactory.create(AppModule, { logger: false });
 
   try {
-    app.setGlobalPrefix('api');
+    app.setGlobalPrefix('api', {
+      exclude: [
+        { path: 'auth/login', method: RequestMethod.GET },
+        { path: 'auth/callback', method: RequestMethod.GET },
+        { path: 'auth/logout', method: RequestMethod.POST },
+      ],
+    });
 
     const config = new DocumentBuilder()
       .setTitle('CS Toolboxes API')
