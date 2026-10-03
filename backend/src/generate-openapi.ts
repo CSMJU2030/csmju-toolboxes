@@ -1,21 +1,27 @@
 import { writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
-import { NestFactory } from '@nestjs/core';
 import { RequestMethod } from '@nestjs/common';
+import { Test } from '@nestjs/testing';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 import { AppModule } from './app.module';
+import { PrismaService } from './prisma/prisma.service';
 
 async function generateOpenApi(): Promise<void> {
-  // OpenAPI generation does not connect to the database, but PrismaService
-  // requires a connection string while Nest constructs the application.
-  process.env.DATABASE_URL ??=
-    'postgresql://openapi:openapi@localhost:5432/openapi';
-
-  const app = await NestFactory.create(AppModule, { logger: false });
+  // OpenAPI generation only inspects route metadata; it must not require a
+  // database connection or initialize Prisma lifecycle hooks.
+  const moduleRef = await Test.createTestingModule({
+    imports: [AppModule],
+  })
+    .overrideProvider(PrismaService)
+    .useValue({})
+    .compile();
+  const app = moduleRef.createNestApplication({ logger: false });
 
   try {
+    await app.init();
+
     app.setGlobalPrefix('api', {
       exclude: [
         { path: 'auth/login', method: RequestMethod.GET },
