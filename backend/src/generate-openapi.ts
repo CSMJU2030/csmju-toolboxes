@@ -8,6 +8,11 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 
 async function generateOpenApi(): Promise<void> {
+  // OpenAPI generation does not connect to the database, but PrismaService
+  // requires a connection string while Nest constructs the application.
+  process.env.DATABASE_URL ??=
+    'postgresql://openapi:openapi@localhost:5432/openapi';
+
   const app = await NestFactory.create(AppModule, { logger: false });
 
   try {

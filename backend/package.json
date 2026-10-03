@@ -14,7 +14,7 @@
     "test:watch": "jest --watch",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "generate:openapi": "ts-node src/generate-openapi.ts"
+    "generate:openapi": "prisma generate && ts-node src/generate-openapi.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.0",
