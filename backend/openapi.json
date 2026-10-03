@@ -1,0 +1,483 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/health": {
+      "get": {
+        "operationId": "HealthController_health",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Subsystem is ready",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "status",
+                        "service"
+                      ],
+                      "properties": {
+                        "status": {
+                          "type": "string",
+                          "example": "ok"
+                        },
+                        "service": {
+                          "type": "string",
+                          "example": "csmju-toolboxes"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Check subsystem health",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/api/v1/image-history": {
+      "post": {
+        "operationId": "ImageHistoryController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "original",
+                  "compressed"
+                ],
+                "properties": {
+                  "original": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "compressed": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Image history record and download URLs"
+          },
+          "401": {
+            "description": "Bearer access token is missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Save original and compressed images for 30 days",
+        "tags": [
+          "image-history"
+        ]
+      },
+      "get": {
+        "operationId": "ImageHistoryController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Image history ordered from newest to oldest"
+          },
+          "401": {
+            "description": "Bearer access token is missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List unexpired image history for the authenticated user",
+        "tags": [
+          "image-history"
+        ]
+      }
+    },
+    "/api/v1/image-history/{id}/original": {
+      "get": {
+        "operationId": "ImageHistoryController_downloadOriginal",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Bearer access token is missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Download an original image owned by the authenticated user",
+        "tags": [
+          "image-history"
+        ]
+      }
+    },
+    "/api/v1/image-history/{id}/compressed": {
+      "get": {
+        "operationId": "ImageHistoryController_downloadCompressed",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Bearer access token is missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Download a compressed image owned by the authenticated user",
+        "tags": [
+          "image-history"
+        ]
+      }
+    },
+    "/api/v1/image-history/{id}": {
+      "delete": {
+        "operationId": "ImageHistoryController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Image history and stored files deleted"
+          },
+          "401": {
+            "description": "Bearer access token is missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete an image history record and its files",
+        "tags": [
+          "image-history"
+        ]
+      }
+    },
+    "/api/v1/tools": {
+      "get": {
+        "operationId": "ToolsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Active tools ordered by creation date",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "name",
+                          "category",
+                          "isActive",
+                          "createdAt",
+                          "updatedAt"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "name": {
+                            "type": "string",
+                            "example": "ลดขนาดรูปภาพ"
+                          },
+                          "description": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "category": {
+                            "type": "string",
+                            "enum": [
+                              "IMAGE",
+                              "DOCUMENT",
+                              "OTHER"
+                            ]
+                          },
+                          "isActive": {
+                            "type": "boolean",
+                            "example": true
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer access token is missing or invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "error"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "example": "UNAUTHORIZED"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List active tools",
+        "tags": [
+          "tools"
+        ]
+      }
+    },
+    "/api/v1/tool-usages": {
+      "get": {
+        "operationId": "ToolUsagesController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Usage history ordered from newest to oldest",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "coreUserId",
+                          "toolId",
+                          "status",
+                          "createdAt",
+                          "updatedAt"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "coreUserId": {
+                            "type": "string",
+                            "maxLength": 64
+                          },
+                          "toolId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "SUCCESS",
+                              "FAILED"
+                            ]
+                          },
+                          "inputSizeBytes": {
+                            "type": "integer",
+                            "nullable": true,
+                            "minimum": 0
+                          },
+                          "outputSizeBytes": {
+                            "type": "integer",
+                            "nullable": true,
+                            "minimum": 0
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer access token is missing or invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "error"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "example": "UNAUTHORIZED"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List tool usage history for the authenticated user",
+        "tags": [
+          "tool-usages"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "CS Toolboxes API",
+    "description": "API contract for the CSMJU Computer Science toolboxes subsystem",
+    "version": "1.0.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {}
+  }
+}

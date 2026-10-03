@@ -3,11 +3,13 @@
 .env.*.local
 node_modules/
 .pnpm-store/
+.tmp-corepack/
 .next/
 dist/
 build/
 coverage/
 generated/
+backend/data/
 *.pem
 *.key
 !.env.example

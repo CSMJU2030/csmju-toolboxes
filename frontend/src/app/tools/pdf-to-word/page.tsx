@@ -83,13 +83,13 @@ export default function PdfToWordPage() {
         <header className="mb-6 border-b border-surface-variant pb-5">
           <div className="flex items-start gap-3">
             <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-primary-container text-white"><FileText size={24} aria-hidden="true" /></span>
-            <div><p className="m-0 text-xs font-semibold tracking-wide text-primary-container">เครื่องมือเอกสาร</p><h1 className="mb-1 mt-1 text-2xl font-semibold sm:text-3xl">แปลง PDF เป็น Word</h1><p className="m-0 max-w-2xl text-sm leading-7 text-on-surface-variant">ดึงข้อความจาก PDF แล้วดาวน์โหลดเป็นไฟล์ Word (.docx) เพื่อแก้ไขต่อ</p></div>
+            <div><p className="m-0 text-sm font-semibold text-primary-container">เครื่องมือเอกสาร</p><h1 className="mb-1 mt-1 text-2xl font-semibold sm:text-3xl">แปลง PDF เป็น Word</h1><p className="m-0 max-w-2xl text-sm leading-7 text-on-surface-variant">ดึงข้อความจาก PDF แล้วดาวน์โหลดเป็นไฟล์ Word (.docx) เพื่อแก้ไขต่อ</p></div>
           </div>
         </header>
 
         <section className="rounded-xl border border-surface-variant bg-surface-container p-4 sm:p-6" aria-labelledby="upload-title">
           <h2 id="upload-title" className="m-0 text-lg font-semibold">เลือกไฟล์ PDF</h2>
-          <p className="mb-4 mt-1 text-sm leading-6 text-on-surface-variant">รองรับ PDF ที่มีข้อความเลือกคัดลอกได้ ขนาดไม่เกิน 25 MB และไม่เกิน 200 หน้า</p>
+          <p className="mb-4 mt-1 text-sm leading-relaxed text-on-surface-variant">รองรับ PDF ที่มีข้อความเลือกคัดลอกได้ ขนาดไม่เกิน 25 MB และไม่เกิน 200 หน้า</p>
 
           {!file ? (
             <div onDragOver={(event) => { event.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={onDrop} className={`flex min-h-52 flex-col items-center justify-center rounded-lg border-2 border-dashed px-4 py-8 text-center ${dragging ? "border-primary-container bg-surface" : "border-surface-variant bg-surface"}`}>
@@ -102,8 +102,8 @@ export default function PdfToWordPage() {
           ) : (
             <div className="rounded-lg border border-surface-variant bg-surface p-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex min-w-0 items-center gap-3"><span className="grid size-10 shrink-0 place-items-center rounded-lg bg-surface-container text-primary-container"><FileText size={20} aria-hidden="true" /></span><div className="min-w-0"><p className="m-0 truncate text-sm font-medium">{file.name}</p><p className="m-0 text-xs text-on-surface-variant">{formatBytes(file.size)}{pageCount ? ` · ${pageCount} หน้า` : ""}</p></div></div>
-                <button type="button" onClick={reset} disabled={busy} aria-label="นำ PDF ออก" className="grid size-10 shrink-0 place-items-center rounded-md text-on-surface-variant hover:bg-surface-container disabled:opacity-50"><X size={18} aria-hidden="true" /></button>
+                <div className="flex min-w-0 items-center gap-3"><span className="grid size-10 shrink-0 place-items-center rounded-lg bg-surface-container text-primary-container"><FileText size={20} aria-hidden="true" /></span><div className="min-w-0"><p className="m-0 truncate text-sm font-medium">{file.name}</p><p className="m-0 text-sm text-on-surface-variant">{formatBytes(file.size)}{pageCount ? ` · ${pageCount} หน้า` : ""}</p></div></div>
+                <button type="button" onClick={reset} disabled={busy} aria-label="นำ PDF ออก" className="grid size-10 shrink-0 place-items-center rounded-md text-on-surface-variant hover:bg-surface-container focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container disabled:opacity-50"><X size={18} aria-hidden="true" /></button>
               </div>
               {busy ? <p className="mb-0 mt-4 text-sm text-on-surface-variant" role="status">กำลังอ่านข้อความจาก PDF…</p> : text && <p className="mb-0 mt-4 inline-flex items-center gap-2 text-sm text-emerald-700" role="status"><Check size={16} aria-hidden="true" />อ่านข้อความได้ พร้อมสร้างไฟล์ Word</p>}
             </div>
@@ -120,7 +120,7 @@ export default function PdfToWordPage() {
 
         <aside className="mt-4 rounded-lg border border-surface-variant bg-surface-container p-4" aria-label="ข้อจำกัดและความเป็นส่วนตัว">
           <h2 className="m-0 flex items-center gap-2 text-sm font-semibold"><ShieldCheck size={17} aria-hidden="true" />ข้อควรรู้ก่อนแปลง</h2>
-          <ul className="mb-0 mt-2 space-y-1 pl-5 text-sm leading-6 text-on-surface-variant">
+          <ul className="mb-0 mt-2 space-y-1 pl-5 text-sm leading-relaxed text-on-surface-variant">
             <li>ไฟล์ถูกประมวลผลในเบราว์เซอร์และไม่ถูกอัปโหลดไป backend</li>
             <li>แปลงข้อความและลำดับบรรทัดเป็น Word; รูปภาพ ตาราง และการจัดหน้าอาจไม่เหมือน PDF ต้นฉบับ</li>
             <li>PDF ที่เป็นภาพสแกนหรือมีการเข้ารหัสยังไม่รองรับ และยังไม่มี OCR</li>
@@ -129,8 +129,8 @@ export default function PdfToWordPage() {
         </aside>
 
         {text && <section className="mt-4 rounded-xl border border-surface-variant bg-surface-container p-4 sm:p-6" aria-labelledby="preview-title">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><h2 id="preview-title" className="m-0 text-lg font-semibold">ตัวอย่างข้อความที่อ่านได้</h2><span className="text-xs text-on-surface-variant">{text.length.toLocaleString("th-TH")} ตัวอักษร</span></div>
-          <pre className="m-0 max-h-96 overflow-auto whitespace-pre-wrap break-words rounded-lg border border-surface-variant bg-surface p-4 font-sans text-sm leading-6">{text.slice(0, 20_000)}{text.length > 20_000 ? "\n…แสดงตัวอย่างบางส่วน" : ""}</pre>
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><h2 id="preview-title" className="m-0 text-lg font-semibold">ตัวอย่างข้อความที่อ่านได้</h2><span className="text-sm text-on-surface-variant">{text.length.toLocaleString("th-TH")} ตัวอักษร</span></div>
+          <pre className="m-0 max-h-96 overflow-auto whitespace-pre-wrap break-words rounded-lg border border-surface-variant bg-surface p-4 font-sans text-sm leading-relaxed">{text.slice(0, 20_000)}{text.length > 20_000 ? "\n…แสดงตัวอย่างบางส่วน" : ""}</pre>
         </section>}
       </div>
     </main>

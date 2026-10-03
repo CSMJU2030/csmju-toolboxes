@@ -13,6 +13,9 @@
     "build:frontend": "pnpm --dir frontend build",
     "typecheck:frontend": "pnpm --dir frontend typecheck",
     "lint:frontend": "pnpm --dir frontend lint",
-    "lint:ui": "pnpm --dir frontend lint:ui"
+    "lint:ui": "pnpm --dir frontend lint:ui",
+    "db:up": "docker compose --env-file .env.local up -d postgres",
+    "db:down": "docker compose --env-file .env.local stop postgres",
+    "db:logs": "docker compose --env-file .env.local logs -f postgres"
   }
 }

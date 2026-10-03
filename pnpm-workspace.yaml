@@ -8,3 +8,4 @@ allowBuilds:
   '@prisma/engines': true
   '@parcel/watcher': false
   unrs-resolver: false
+  '@scarf/scarf': false

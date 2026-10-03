@@ -157,7 +157,7 @@ export default function NumberBaseConverterPage() {
           <div className="mt-4 grid gap-4 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-end">
             <div>
               <label htmlFor="base-number" className="mb-1 block text-sm font-medium">ตัวเลขที่ต้องการแปลง</label>
-              <input id="base-number" type="text" inputMode="text" autoComplete="off" spellCheck={false} value={value} onChange={(event) => updateValue(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") calculate(); }} placeholder="เช่น 1101, 17 หรือ A.F" aria-describedby="number-help" aria-invalid={Boolean(error)} className="min-h-11 w-full rounded-md border border-surface-variant bg-surface-container px-3 font-mono text-base leading-6 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container" />
+              <input id="base-number" type="text" inputMode="text" autoComplete="off" spellCheck={false} value={value} onChange={(event) => updateValue(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") calculate(); }} placeholder="เช่น 1101, 17 หรือ A.F" aria-describedby="number-help" aria-invalid={Boolean(error)} className="min-h-11 w-full rounded-md border border-surface-variant bg-surface-container px-3 font-mono text-base leading-relaxed outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container" />
               <p id="number-help" className="mt-1 text-sm leading-relaxed text-on-surface-variant">รองรับจำนวนเต็ม เศษส่วน และค่าติดลบ · ใส่จุดทศนิยมด้วย . · สูงสุด 64 หลัก</p>
             </div>
 
@@ -193,7 +193,7 @@ export default function NumberBaseConverterPage() {
           <>
             <section className="mt-5 rounded-lg border border-surface-variant bg-surface-container p-4 sm:p-6" aria-labelledby="answer-title" aria-live="polite">
               <h2 id="answer-title" className="text-sm font-medium text-on-surface-variant">คำตอบ</h2>
-              <p className="mt-1 break-all font-mono text-3xl font-bold leading-tight text-primary-container" aria-label={`คำตอบ ${result.output} ฐาน ${result.targetBase}`}>
+              <p className="mt-1 break-words font-mono text-3xl font-bold leading-tight text-primary-container" aria-label={`คำตอบ ${result.output} ฐาน ${result.targetBase}`}>
                 {result.output}<span className="ml-2 font-sans text-base font-medium text-on-surface-variant">ฐาน {result.targetBase}</span>
               </p>
               <p className="mt-2 text-sm leading-relaxed text-on-surface-variant">{result.input} ฐาน {result.sourceBase} = {result.decimalValue}{result.decimalFractionTruncated ? "…" : ""} ฐานสิบ = {result.output} ฐาน {result.targetBase}</p>
