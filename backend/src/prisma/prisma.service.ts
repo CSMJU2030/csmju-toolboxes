@@ -25,6 +25,7 @@ export class PrismaService
 
     const adapter = new PrismaPg({
       connectionString,
+      max: Number(process.env.DATABASE_POOL_MAX) || 5,
     });
 
     super({
