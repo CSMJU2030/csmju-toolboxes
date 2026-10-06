@@ -3,7 +3,10 @@ import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-const backendUrl = process.env.TOOLBOXES_BACKEND_URL ?? "http://localhost:4237";
+const backendUrl =
+  process.env.BACKEND_URL ??
+  process.env.TOOLBOXES_BACKEND_URL ??
+  "http://localhost:4237";
 const sessionCookie = "csmju_toolboxes_access_token";
 
 async function proxy(request: Request, method: "GET" | "POST") {
