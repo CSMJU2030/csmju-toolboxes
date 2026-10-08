@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Download, ImagePlus, RotateCcw } from "lucide-react";
 
 const titles: Record<string, { title: string; description: string }> = {
@@ -18,7 +18,6 @@ const MAX_PIXELS = 40_000_000;
 export default function ImageTool({ toolId }: { toolId: string }) {
   const details = titles[toolId];
   const [file, setFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState("");
   const [resultUrl, setResultUrl] = useState("");
   const [resultName, setResultName] = useState("toolboxes-image.png");
   const [width, setWidth] = useState("");
@@ -34,12 +33,9 @@ export default function ImageTool({ toolId }: { toolId: string }) {
   const isPicker = toolId === "image-color-picker";
   const isCropper = toolId === "image-cropper";
 
-  useEffect(() => {
-    if (!file) { setPreviewUrl(""); return; }
-    const url = URL.createObjectURL(file);
-    setPreviewUrl(url);
-    return () => URL.revokeObjectURL(url);
-  }, [file]);
+  // URL ของภาพตัวอย่างคำนวณจากไฟล์ตรง ๆ (ไม่ setState ใน effect) แล้วคืนหน่วยความจำเมื่อเปลี่ยนไฟล์
+  const previewUrl = useMemo(() => (file ? URL.createObjectURL(file) : ""), [file]);
+  useEffect(() => () => { if (previewUrl) URL.revokeObjectURL(previewUrl); }, [previewUrl]);
 
   useEffect(() => {
     if (!file) return;
@@ -152,8 +148,8 @@ export default function ImageTool({ toolId }: { toolId: string }) {
           {file && !isPicker && <div className="mt-4 flex flex-wrap gap-3"><button type="button" onClick={() => void processImage()} className="inline-flex min-h-11 items-center gap-2 rounded-md bg-primary-container px-4 font-semibold text-white hover:opacity-90">ประมวลผลภาพ</button><button type="button" onClick={() => { chooseFile(); }} className="inline-flex min-h-11 items-center gap-2 rounded-md border border-surface-variant px-4 text-sm hover:bg-surface-variant"><RotateCcw size={16} aria-hidden="true" />ล้างรูป</button></div>}
           {file && isPicker && <p className="mt-4 text-sm text-on-surface-variant">คลิกบนรูปเพื่ออ่านสีที่ตำแหน่งนั้น</p>}
         </section>
-        {previewUrl && <section className="mt-5 rounded-lg border border-surface-variant bg-surface-container p-4 sm:p-6"><h2 className="text-lg font-semibold">{isPicker ? "คลิกภาพเพื่อเลือกสี" : "ภาพต้นฉบับ"}</h2><img src={previewUrl} alt="ภาพต้นฉบับที่เลือก" onClick={isPicker ? (event) => void pickColor(event) : undefined} className={`mt-3 max-h-[32rem] max-w-full rounded-md border border-surface-variant object-contain ${isPicker ? "cursor-crosshair" : ""}`} />{pickedColor && <p className="mt-3 rounded-md border border-surface-variant p-3 font-mono text-sm">{pickedColor}</p>}</section>}
-        {resultUrl && <section className="mt-5 rounded-lg border border-surface-variant bg-surface-container p-4 sm:p-6"><h2 className="text-lg font-semibold">ภาพผลลัพธ์</h2><img src={resultUrl} alt="ภาพผลลัพธ์" className="mt-3 max-h-[32rem] max-w-full rounded-md border border-surface-variant object-contain" /><a href={resultUrl} download={resultName} className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-md bg-primary-container px-4 font-semibold text-white"><Download size={17} aria-hidden="true" />ดาวน์โหลด {resultName}</a></section>}
+        {previewUrl && <section className="mt-5 rounded-lg border border-surface-variant bg-surface-container p-4 sm:p-6"><h2 className="text-lg font-semibold">{isPicker ? "คลิกภาพเพื่อเลือกสี" : "ภาพต้นฉบับ"}</h2><img src={previewUrl} alt="ภาพต้นฉบับที่เลือก" onClick={isPicker ? (event) => void pickColor(event) : undefined} className={`mt-3 max-h-[32rem] max-w-full rounded-md border border-surface-variant object-contain ${isPicker ? "cursor-crosshair" : ""}`} />{pickedColor && <p className="mt-3 rounded-md border border-surface-variant p-3 font-mono text-sm">{pickedColor}</p>}</section>}{/* eslint-disable-line @next/next/no-img-element -- blob: URL ของไฟล์ในเครื่อง ใช้ next/image ไม่ได้ */}
+        {resultUrl && <section className="mt-5 rounded-lg border border-surface-variant bg-surface-container p-4 sm:p-6"><h2 className="text-lg font-semibold">ภาพผลลัพธ์</h2><img src={resultUrl} alt="ภาพผลลัพธ์" className="mt-3 max-h-[32rem] max-w-full rounded-md border border-surface-variant object-contain" /><a href={resultUrl} download={resultName} className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-md bg-primary-container px-4 font-semibold text-white"><Download size={17} aria-hidden="true" />ดาวน์โหลด {resultName}</a></section>}{/* eslint-disable-line @next/next/no-img-element -- blob: URL ของไฟล์ในเครื่อง ใช้ next/image ไม่ได้ */}
       </div>
     </main>
   );
