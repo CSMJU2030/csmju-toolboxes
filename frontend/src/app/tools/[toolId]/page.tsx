@@ -1,111 +1,35 @@
-"use client";
+import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+import { ToolView } from '@/components/pages/tool-view';
+import { RememberRecent } from '@/components/tools/remember-recent';
+import { findTool, IMAGE_TOOL_SLUGS } from '@/lib/tools/registry';
+import ImageTool from './image-tool';
 
-import Link from "next/link";
-import { useParams } from "next/navigation";
-import { useMemo, useState } from "react";
-import { ArrowLeft, Copy, Play, RotateCcw, Wrench } from "lucide-react";
-import ImageTool from "./image-tool";
+type Props = { params: Promise<{ toolId: string }> };
 
-type ToolDefinition = { title: string; description: string; placeholder: string; label: string; secondaryLabel?: string; options?: { label: string; value: string }[]; settingLabel?: string };
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const tool = findTool((await params).toolId);
 
-const definitions: Record<string, ToolDefinition> = {
-  "json-formatter": { title: "จัดรูปแบบและตรวจ JSON", description: "ตรวจ syntax และจัดรูปแบบข้อมูล JSON ในเบราว์เซอร์", label: "JSON", placeholder: '{"name":"Toolboxes","active":true}', options: [{ label: "อ่านง่าย (Pretty)", value: "pretty" }, { label: "ย่อ (Minify)", value: "minify" }], settingLabel: "รูปแบบผลลัพธ์" },
-  "uuid-generator": { title: "สร้าง UUID", description: "สร้าง UUID v4 ด้วย crypto.randomUUID() ของเบราว์เซอร์", label: "จำนวนที่ต้องการสร้าง", placeholder: "5" },
-  "regex-tester": { title: "ทดลอง Regular Expression", description: "ทดลอง pattern ด้วย JavaScript RegExp กับข้อความตัวอย่าง", label: "Regular expression", placeholder: "\\b[a-z]+\\b", secondaryLabel: "ข้อความที่ต้องการทดสอบ", options: [{ label: "ไม่มี flag", value: "" }, { label: "ไม่สนตัวพิมพ์เล็กใหญ่ (i)", value: "i" }, { label: "ทุกตำแหน่ง (g)", value: "g" }, { label: "หลายบรรทัด (gm)", value: "gm" }, { label: "ไม่สนตัวพิมพ์ + ทุกตำแหน่ง (gi)", value: "gi" }], settingLabel: "Flags" },
-  "url-encoder": { title: "เข้ารหัสและถอดรหัส URL", description: "ประมวลผลในเครื่อง ไม่ส่งข้อความไปยังเซิร์ฟเวอร์", label: "ข้อความหรือ URL", placeholder: "ข้อความที่มีช่องว่าง & สัญลักษณ์", options: [{ label: "เข้ารหัสส่วนประกอบ URL", value: "encode" }, { label: "ถอดรหัส URL", value: "decode" }], settingLabel: "การทำงาน" },
-  "timestamp-converter": { title: "แปลง Unix Timestamp", description: "รองรับวินาทีหรือมิลลิวินาที และวันเวลารูปแบบ ISO", label: "ค่าเวลา", placeholder: "เช่น 1735689600 หรือ 2025-01-01T00:00:00Z", options: [{ label: "Unix วินาที → วันเวลา", value: "seconds" }, { label: "Unix มิลลิวินาที → วันเวลา", value: "milliseconds" }, { label: "วันเวลา → Unix วินาที", value: "date" }], settingLabel: "ทิศทางการแปลง" },
-  "password-generator": { title: "สร้างรหัสผ่านสุ่ม", description: "ใช้ Web Crypto API ในเบราว์เซอร์ เลือกความยาว 8–128 ตัวอักษร", label: "ความยาว", placeholder: "20", options: [{ label: "ตัวอักษรและตัวเลข", value: "alnum" }, { label: "รวมสัญลักษณ์", value: "symbols" }], settingLabel: "ชุดอักขระ" },
-  "word-counter": { title: "นับคำและตัวอักษร", description: "นับจำนวนตัวอักษร คำ บรรทัด และเวลาอ่านโดยประมาณ", label: "ข้อความ", placeholder: "วางหรือพิมพ์ข้อความที่นี่..." },
-  "csv-json-converter": { title: "แปลง CSV และ JSON", description: "แปลง CSV ที่มีแถวหัวตารางเป็น JSON หรือแปลง JSON objects เป็น CSV", label: "ข้อมูลต้นทาง", placeholder: "name,score\nMali,90\nSomchai,85", options: [{ label: "CSV → JSON", value: "csv-json" }, { label: "JSON → CSV", value: "json-csv" }], settingLabel: "ทิศทาง" },
-  "html-entity": { title: "HTML Entity Encoder", description: "เข้ารหัสหรือถอดรหัสอักขระพิเศษโดยไม่แทรก HTML ลงหน้าเว็บ", label: "ข้อความ", placeholder: "<h1>Tom & Jerry</h1>", options: [{ label: "เข้ารหัส", value: "encode" }, { label: "ถอดรหัส", value: "decode" }], settingLabel: "การทำงาน" },
-  "jwt-decoder": { title: "อ่านข้อมูล JWT", description: "ถอด Header และ Payload เพื่อการตรวจดูเท่านั้น ไม่ตรวจลายเซ็นหรือยืนยันตัวตน", label: "JWT", placeholder: "วาง token ที่มีรูปแบบ header.payload.signature" },
-  "color-converter": { title: "แปลงค่าสี HEX", description: "แสดงค่า RGB, HSL และตัวอย่างสีจาก HEX 3 หรือ 6 หลัก", label: "รหัสสี HEX", placeholder: "2563eb" },
-  "chmod-calculator": { title: "คำนวณสิทธิ์ไฟล์ chmod", description: "ใส่เลขฐานแปด 3 หรือ 4 หลัก เช่น 755 หรือ 0644", label: "สิทธิ์เลขฐานแปด", placeholder: "755" },
-  "subnet-calculator": { title: "คำนวณ IPv4 Subnet", description: "ใส่ IPv4 พร้อม prefix เช่น 192.168.1.10/24", label: "IPv4 / CIDR", placeholder: "192.168.1.10/24" },
-  "text-case-converter": { title: "แปลงรูปแบบตัวอักษร", description: "แปลงรูปแบบตัวพิมพ์และรูปแบบชื่อตัวแปร", label: "ข้อความ", placeholder: "Hello world example", options: [{ label: "UPPERCASE", value: "upper" }, { label: "lowercase", value: "lower" }, { label: "Title Case", value: "title" }, { label: "camelCase", value: "camel" }, { label: "snake_case", value: "snake" }, { label: "kebab-case", value: "kebab" }], settingLabel: "รูปแบบ" },
-  "sql-formatter": { title: "จัดรูปแบบ SQL", description: "จัดวาง clause หลักและปรับ SQL keywords เป็นตัวพิมพ์ใหญ่ (รูปแบบเบื้องต้น)", label: "คำสั่ง SQL", placeholder: "select id, name from users where active = true order by name" },
-  "csv-validator": { title: "ตรวจสอบโครงสร้าง CSV", description: "ตรวจจำนวนคอลัมน์ หัวตารางว่างหรือซ้ำ และแถวที่มีจำนวนช่องไม่ตรงกัน", label: "ข้อมูล CSV", placeholder: "name,score\nMali,90\nSomchai,85" },
-  "password-strength-checker": { title: "ตรวจความแข็งแรงรหัสผ่าน", description: "ประเมินจากความยาวและประเภทอักขระในเครื่อง ไม่ส่งรหัสผ่านไปเครือข่าย", label: "รหัสผ่านที่ต้องการตรวจ", placeholder: "พิมพ์หรือวางรหัสผ่านที่นี่" },
-  "hmac-generator": { title: "สร้าง HMAC-SHA-256", description: "คำนวณ HMAC-SHA-256 ด้วย Web Crypto API ในเบราว์เซอร์", label: "Secret key", placeholder: "ใส่ secret key", secondaryLabel: "ข้อความ (message)" },
-  "secure-token-generator": { title: "สร้าง Secure Token", description: "สร้างไบต์สุ่มด้วย crypto.getRandomValues() ในเบราว์เซอร์", label: "ขนาด token (บิต)", placeholder: "256", options: [{ label: "Base64 URL-safe", value: "base64url" }, { label: "เลขฐานสิบหก", value: "hex" }], settingLabel: "รูปแบบผลลัพธ์" },
-};
-
-function parseCsv(text: string): string[][] {
-  const rows: string[][] = [];
-  let row: string[] = [], cell = "", quoted = false;
-  for (let i = 0; i < text.length; i++) {
-    const char = text[i];
-    if (char === '"' && quoted && text[i + 1] === '"') { cell += '"'; i++; }
-    else if (char === '"') quoted = !quoted;
-    else if (char === "," && !quoted) { row.push(cell); cell = ""; }
-    else if ((char === "\n" || char === "\r") && !quoted) { if (char === "\r" && text[i + 1] === "\n") i++; row.push(cell); if (row.some((v) => v !== "")) rows.push(row); row = []; cell = ""; }
-    else cell += char;
-  }
-  if (quoted) throw new Error("พบเครื่องหมายอัญประกาศที่เปิดไว้แต่ไม่ปิด");
-  row.push(cell); if (row.some((v) => v !== "")) rows.push(row);
-  return rows;
+  return tool ? { title: tool.name, description: tool.description } : { title: 'ไม่พบเครื่องมือ' };
 }
 
-async function runTool(id: string, input: string, secondary: string, setting: string): Promise<string> {
-  switch (id) {
-    case "json-formatter": { const parsed: unknown = JSON.parse(input); return setting === "minify" ? JSON.stringify(parsed) : JSON.stringify(parsed, null, 2); }
-    case "uuid-generator": { const count = Number(input); if (!Number.isInteger(count) || count < 1 || count > 100) throw new Error("ใส่จำนวนเต็มระหว่าง 1–100"); return Array.from({ length: count }, () => crypto.randomUUID()).join("\n"); }
-    case "regex-tester": { const regex = new RegExp(input, setting); const matches = [...secondary.matchAll(new RegExp(regex.source, regex.flags.includes("g") ? regex.flags : `${regex.flags}g`))]; return matches.length ? matches.map((m, i) => `${i + 1}. “${m[0]}” (ตำแหน่ง ${m.index})${m.length > 1 ? ` · กลุ่ม: ${m.slice(1).join(" | ")}` : ""}`).join("\n") : "ไม่พบข้อความที่ตรงกับ pattern"; }
-    case "url-encoder": return setting === "decode" ? decodeURIComponent(input) : encodeURIComponent(input);
-    case "timestamp-converter": { if (setting === "date") { const ms = Date.parse(input); if (!Number.isFinite(ms)) throw new Error("รูปแบบวันเวลาไม่ถูกต้อง"); return `Unix วินาที: ${Math.floor(ms / 1000)}\nUnix มิลลิวินาที: ${ms}\nISO: ${new Date(ms).toISOString()}`; } const n = Number(input); if (!Number.isFinite(n)) throw new Error("กรุณาใส่ timestamp ที่เป็นตัวเลข"); const date = new Date(setting === "seconds" ? n * 1000 : n); if (Number.isNaN(date.getTime())) throw new Error("ค่า timestamp อยู่นอกช่วงที่รองรับ"); return `ISO: ${date.toISOString()}\nเวลาท้องถิ่น: ${date.toLocaleString()}\nUnix วินาที: ${Math.floor(date.getTime() / 1000)}\nUnix มิลลิวินาที: ${date.getTime()}`; }
-    case "password-generator": { const length = Number(input); if (!Number.isInteger(length) || length < 8 || length > 128) throw new Error("ความยาวต้องเป็นจำนวนเต็ม 8–128"); const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789" + (setting === "symbols" ? "!@#$%^&*()-_=+[]{}" : ""); const random = new Uint32Array(length); crypto.getRandomValues(random); return Array.from(random, (n) => chars[n % chars.length]).join(""); }
-    case "word-counter": { const words = input.trim() ? input.trim().split(/\s+/u).length : 0; const lines = input ? input.split(/\r\n|\r|\n/u).length : 0; return `ตัวอักษร (รวมช่องว่าง): ${input.length}\nตัวอักษร (ไม่รวมช่องว่าง): ${input.replace(/\s/gu, "").length}\nคำ/กลุ่มข้อความ: ${words}\nบรรทัด: ${lines}\nเวลาอ่านโดยประมาณ: ${Math.max(1, Math.ceil(words / 200))} นาที`; }
-    case "csv-json-converter": { if (setting === "csv-json") { const rows = parseCsv(input); if (!rows.length) return "[]"; const headers = rows[0].map((h) => h.trim()); if (new Set(headers).size !== headers.length) throw new Error("ชื่อคอลัมน์ต้องไม่ซ้ำกัน"); return JSON.stringify(rows.slice(1).map((row) => Object.fromEntries(headers.map((h, i) => [h, row[i] ?? ""]))), null, 2); } const parsed: unknown = JSON.parse(input); if (!Array.isArray(parsed) || parsed.some((r) => !r || typeof r !== "object" || Array.isArray(r))) throw new Error("JSON ต้องเป็น array ของ objects"); const list = parsed as Record<string, unknown>[]; const headers = [...new Set(list.flatMap((item) => Object.keys(item)))]; const quote = (v: unknown) => { const s = typeof v === "string" ? v : JSON.stringify(v ?? ""); return /[",\r\n]/u.test(s) ? `"${s.replace(/"/gu, '""')}"` : s; }; return [headers.map(quote).join(","), ...list.map((item) => headers.map((h) => quote(item[h])).join(","))].join("\n"); }
-    case "csv-validator": { const rows = parseCsv(input); if (!rows.length) throw new Error("กรุณาใส่ข้อมูล CSV"); const headers = rows[0].map((h) => h.trim()); const issues: string[] = []; if (headers.some((h) => !h)) issues.push("มีชื่อคอลัมน์ว่าง"); if (new Set(headers).size !== headers.length) issues.push("มีชื่อคอลัมน์ซ้ำ"); rows.slice(1).forEach((row, index) => { if (row.length !== headers.length) issues.push(`แถว ${index + 2}: มี ${row.length} ช่อง (หัวตารางมี ${headers.length} ช่อง)`); }); return `${issues.length ? `พบ ${issues.length} จุดที่ควรตรวจสอบ:\n${issues.slice(0, 30).map((issue) => `• ${issue}`).join("\n")}${issues.length > 30 ? "\n…แสดงไม่เกิน 30 รายการ" : ""}` : "CSV ผ่านการตรวจสอบเบื้องต้น"}\n\nจำนวนแถวข้อมูล: ${rows.length - 1}\nจำนวนคอลัมน์: ${headers.length}\nหัวตาราง: ${headers.join(" | ")}`; }
-    case "html-entity": { if (setting === "decode") { const area = document.createElement("textarea"); area.innerHTML = input; return area.value; } return input.replace(/&/gu, "&amp;").replace(/</gu, "&lt;").replace(/>/gu, "&gt;").replace(/"/gu, "&quot;").replace(/'/gu, "&#39;"); }
-    case "jwt-decoder": { const parts = input.trim().split("."); if (parts.length !== 3) throw new Error("JWT ต้องประกอบด้วย 3 ส่วนคั่นด้วยจุด"); const decode = (part: string) => JSON.stringify(JSON.parse(decodeURIComponent(Array.from(atob(part.replace(/-/gu, "+").replace(/_/gu, "/")), (c) => `%${c.charCodeAt(0).toString(16).padStart(2, "0")}`).join(""))), null, 2); return `Header\n${decode(parts[0])}\n\nPayload\n${decode(parts[1])}\n\nหมายเหตุ: ข้อมูลนี้ยังไม่ได้ตรวจลายเซ็น`; }
-    case "color-converter": { const hex = input.trim().replace(/^#/u, ""); const normalized = hex.length === 3 ? [...hex].map((c) => c + c).join("") : hex; if (!/^[0-9a-f]{6}$/iu.test(normalized)) throw new Error("กรุณาใส่ HEX 3 หรือ 6 หลัก เช่น 2563eb"); const n = Number.parseInt(normalized, 16), r = n >> 16, g = n >> 8 & 255, b = n & 255; const [rr, gg, bb] = [r, g, b].map((v) => v / 255); const max = Math.max(rr, gg, bb), min = Math.min(rr, gg, bb), d = max - min; let h = 0; if (d) h = max === rr ? ((gg - bb) / d) % 6 : max === gg ? (bb - rr) / d + 2 : (rr - gg) / d + 4; h = Math.round(h * 60 + 360) % 360; const s = max === 0 ? 0 : d / max; return `HEX: #${normalized.toUpperCase()}\nRGB: rgb(${r}, ${g}, ${b})\nHSL: hsl(${h}, ${Math.round(s * 100)}%, ${Math.round(max * 100)}%)`; }
-    case "chmod-calculator": { const value = input.trim(); if (!/^[0-7]{3,4}$/u.test(value)) throw new Error("ใส่เลขฐานแปด 3 หรือ 4 หลัก เช่น 755 หรือ 0644"); const digits = value.slice(-3); const symbols = [...digits].map((d) => { const n = Number(d); return `${n & 4 ? "r" : "-"}${n & 2 ? "w" : "-"}${n & 1 ? "x" : "-"}`; }).join(""); return `เลขฐานแปด: ${value}\nสัญลักษณ์: ${symbols}\nคำสั่ง: chmod ${value} <ไฟล์>`; }
-    case "subnet-calculator": { const [ip, prefixText] = input.trim().split("/"); const octets = ip.split(".").map(Number); const prefix = Number(prefixText); if (octets.length !== 4 || octets.some((n) => !Number.isInteger(n) || n < 0 || n > 255) || !Number.isInteger(prefix) || prefix < 0 || prefix > 32) throw new Error("รูปแบบไม่ถูกต้อง ใช้ IPv4/CIDR เช่น 192.168.1.10/24"); const addr = octets.reduce((n, v) => n * 256 + v, 0); const mask = prefix === 0 ? 0 : (0xffffffff << (32 - prefix)) >>> 0; const network = (addr & mask) >>> 0, broadcast = (network | (~mask >>> 0)) >>> 0; const fmt = (n: number) => [24, 16, 8, 0].map((shift) => Math.floor(n / 2 ** shift) % 256).join("."); return `Network: ${fmt(network)}/${prefix}\nSubnet mask: ${fmt(mask)}\nBroadcast: ${fmt(broadcast)}\nจำนวน IP ทั้งหมด: ${2 ** (32 - prefix)}\nช่วง IP: ${fmt(network + 1)} – ${fmt(broadcast - 1)}${prefix >= 31 ? "\nหมายเหตุ: /31 และ /32 ไม่มีช่วง host แบบทั่วไป" : ""}`; }
-    case "text-case-converter": { const words = input.trim().replace(/([a-z0-9])([A-Z])/gu, "$1 $2").match(/[\p{L}\p{N}]+/gu) ?? []; if (setting === "upper") return input.toLocaleUpperCase(); if (setting === "lower") return input.toLocaleLowerCase(); if (setting === "title") return words.map((w) => w.charAt(0).toLocaleUpperCase() + w.slice(1).toLocaleLowerCase()).join(" "); const lower = words.map((w) => w.toLocaleLowerCase()); if (setting === "snake") return lower.join("_"); if (setting === "kebab") return lower.join("-"); return lower.map((w, i) => i ? w.charAt(0).toLocaleUpperCase() + w.slice(1) : w).join(""); }
-    case "sql-formatter": { const keywords = "select from where group by having order by limit offset insert into values update set delete join inner join left join right join on as and or desc asc distinct count sum avg min max null is not like in case when then else end create table alter table drop table".split(" "); let sql = input.replace(/\s+/gu, " ").trim(); for (const phrase of [...new Set(keywords)].sort((a, b) => b.length - a.length)) { const re = new RegExp(`\\b${phrase.replace(/ /gu, "\\s+")}\\b`, "giu"); sql = sql.replace(re, phrase.toUpperCase()); } return sql.replace(/\b(SELECT|INSERT INTO|UPDATE|DELETE FROM|FROM|WHERE|GROUP BY|HAVING|ORDER BY|LIMIT|OFFSET|VALUES|SET|JOIN|LEFT JOIN|RIGHT JOIN|INNER JOIN|ON)\b/gu, "\n$1").trim().replace(/^\n/u, "").replace(/,\s*/gu, ",\n  "); }
-    case "password-strength-checker": { if (!input) throw new Error("กรุณาใส่รหัสผ่าน"); const checks = [{ label: "อย่างน้อย 12 ตัวอักษร", ok: input.length >= 12 }, { label: "มีตัวพิมพ์เล็ก", ok: /[a-z]/u.test(input) }, { label: "มีตัวพิมพ์ใหญ่", ok: /[A-Z]/u.test(input) }, { label: "มีตัวเลข", ok: /[0-9]/u.test(input) }, { label: "มีสัญลักษณ์", ok: /[^\p{L}\p{N}]/u.test(input) }]; const score = checks.filter((item) => item.ok).length; const level = score <= 2 ? "ควรปรับปรุง" : score <= 3 ? "ปานกลาง" : score === 4 ? "ดี" : "แข็งแรงตามเกณฑ์พื้นฐาน"; return `ผลประเมิน: ${level} (${score}/5)\n${checks.map((item) => `${item.ok ? "[x]" : "[ ]"} ${item.label}`).join("\n")}\n\nผลนี้เป็นการประเมินพื้นฐาน ไม่ได้ตรวจว่ารหัสผ่านเคยรั่วไหลหรือไม่`; }
-    case "hmac-generator": { if (!input) throw new Error("กรุณาใส่ secret key"); const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(input), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]); const signature = new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(secondary))); return [...signature].map((byte) => byte.toString(16).padStart(2, "0")).join(""); }
-    case "secure-token-generator": { const bits = Number(input); if (!Number.isInteger(bits) || bits < 128 || bits > 512 || bits % 8) throw new Error("เลือกขนาด 128–512 บิต โดยเพิ่มครั้งละ 8 บิต"); const bytes = crypto.getRandomValues(new Uint8Array(bits / 8)); return setting === "hex" ? [...bytes].map((byte) => byte.toString(16).padStart(2, "0")).join("") : btoa(String.fromCharCode(...bytes)).replace(/\+/gu, "-").replace(/\//gu, "_").replace(/=+$/u, ""); }
-    default: throw new Error("ไม่พบเครื่องมือนี้");
+/// เครื่องมือแบบสเปก (ทะเบียน lib/tools) และเครื่องมือรูปภาพของ AIE (`ImageTool`)
+/// เครื่องมือที่มีโฟลเดอร์ของตัวเอง (image-compressor ฯลฯ) Next จับเส้นทางนั้นก่อนหน้านี้อยู่แล้ว
+export default async function ToolPage({ params }: Props) {
+  const { toolId } = await params;
+
+  if (IMAGE_TOOL_SLUGS.has(toolId)) {
+    return (
+      <>
+        <RememberRecent slug={toolId} />
+        <ImageTool toolId={toolId} />
+      </>
+    );
   }
-}
 
-export default function AdditionalToolPage() {
-  const params = useParams<{ toolId: string }>();
-  const id = params.toolId;
-  const definition = definitions[id];
-  const [input, setInput] = useState("");
-  const [secondary, setSecondary] = useState("");
-  const [setting, setSetting] = useState(definition?.options?.[0]?.value ?? "");
-  const [output, setOutput] = useState("");
-  const [error, setError] = useState("");
-  const [copied, setCopied] = useState(false);
-  const helper = useMemo(() => definition?.options?.find((item) => item.value === setting)?.label, [definition, setting]);
+  const tool = findTool(toolId);
 
-  if (id.startsWith("image-")) return <ImageTool toolId={id} />;
-  if (!definition) return <main className="min-h-screen bg-surface p-8 text-on-surface"><div className="mx-auto max-w-3xl"><p>ไม่พบเครื่องมือที่ต้องการ</p><Link className="text-primary-container" href="/">กลับหน้ารวม</Link></div></main>;
+  if (!tool || tool.kind !== 'spec') notFound();
 
-  const run = async () => { setError(""); setOutput(""); setCopied(false); try { setOutput(await runTool(id, input, secondary, setting)); } catch (cause) { setError(cause instanceof Error ? cause.message : "ประมวลผลไม่สำเร็จ"); } };
-  const clear = () => { setInput(""); setSecondary(""); setOutput(""); setError(""); };
-  const primaryType = id === "uuid-generator" || id === "password-generator" || id === "secure-token-generator" ? "number" : "text";
-
-  return (
-    <main className="min-h-screen bg-surface px-4 py-6 text-on-surface sm:px-8 sm:py-10">
-      <div className="mx-auto max-w-4xl">
-        <Link href="/" className="inline-flex min-h-11 items-center gap-2 rounded-md px-2 text-sm text-on-surface-variant hover:bg-surface-variant"><ArrowLeft size={16} aria-hidden="true" />กลับไปหน้ารวมเครื่องมือ</Link>
-        <header className="mt-4 rounded-lg border border-surface-variant bg-surface-container p-5 sm:p-6"><div className="flex items-start gap-3"><span className="grid size-11 shrink-0 place-items-center rounded-lg bg-surface text-primary-container"><Wrench size={22} aria-hidden="true" /></span><div><p className="text-sm text-primary-container">CSMJU · เครื่องมือคอมพิวเตอร์</p><h1 className="text-2xl font-bold">{definition.title}</h1><p className="mt-1 text-sm leading-relaxed text-on-surface-variant">{definition.description}</p></div></div></header>
-        <section className="mt-5 rounded-lg border border-surface-variant bg-surface-container p-4 sm:p-6">
-          <label htmlFor="tool-input" className="mb-1 block text-sm font-medium">{definition.label}</label>
-          {primaryType === "number" ? <input id="tool-input" type="number" min={id === "uuid-generator" ? 1 : 8} max={id === "uuid-generator" ? 100 : 128} value={input} onChange={(e) => setInput(e.target.value)} placeholder={definition.placeholder} className="min-h-11 w-full rounded-md border border-surface-variant bg-surface-container px-3 font-mono" /> : <textarea id="tool-input" rows={id === "json-formatter" || id === "csv-json-converter" || id === "sql-formatter" ? 9 : 5} value={input} onChange={(e) => setInput(e.target.value)} placeholder={definition.placeholder} spellCheck={false} className="w-full rounded-md border border-surface-variant bg-surface-container p-3 font-mono text-sm leading-relaxed" />}
-          {definition.secondaryLabel && <div className="mt-4"><label htmlFor="tool-secondary" className="mb-1 block text-sm font-medium">{definition.secondaryLabel}</label><textarea id="tool-secondary" rows={5} value={secondary} onChange={(e) => setSecondary(e.target.value)} className="w-full rounded-md border border-surface-variant bg-surface-container p-3 font-mono text-sm" /></div>}
-          {definition.options && <div className="mt-4"><label htmlFor="tool-setting" className="mb-1 block text-sm font-medium">{definition.settingLabel}</label><select id="tool-setting" value={setting} onChange={(e) => setSetting(e.target.value)} className="min-h-11 w-full rounded-md border border-surface-variant bg-surface-container px-3">{definition.options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></div>}
-          {id === "jwt-decoder" && <p className="mt-2 text-sm text-on-surface-variant">ห้ามใช้ผลลัพธ์นี้แทนการตรวจสอบ JWT ฝั่งเซิร์ฟเวอร์</p>}
-          {error && <p role="alert" className="mt-4 rounded-md border border-error p-3 text-sm text-error">{error}</p>}
-          <div className="mt-4 flex flex-wrap gap-3"><button type="button" onClick={run} className="inline-flex min-h-11 items-center gap-2 rounded-md bg-primary-container px-4 font-semibold text-white hover:opacity-90"><Play size={17} aria-hidden="true" />{id === "uuid-generator" || id === "password-generator" ? "สร้าง" : "ประมวลผล"}</button><button type="button" onClick={clear} className="inline-flex min-h-11 items-center gap-2 rounded-md border border-surface-variant px-4 text-sm hover:bg-surface-variant"><RotateCcw size={16} aria-hidden="true" />ล้างข้อมูล</button>{helper && <span className="self-center text-sm text-on-surface-variant">{helper}</span>}</div>
-        </section>
-        {output && <section className="mt-5 rounded-lg border border-surface-variant bg-surface-container p-4 sm:p-6" aria-live="polite"><div className="flex items-center justify-between gap-3"><h2 className="m-0 text-lg font-semibold">ผลลัพธ์</h2><button type="button" onClick={() => { void navigator.clipboard.writeText(output).then(() => setCopied(true)); }} className="inline-flex min-h-10 items-center gap-2 rounded-md border border-surface-variant px-3 text-sm hover:bg-surface-variant"><Copy size={15} aria-hidden="true" />{copied ? "คัดลอกแล้ว" : "คัดลอก"}</button></div><pre className="mt-3 max-h-[32rem] overflow-auto whitespace-pre-wrap break-words rounded-md bg-surface p-4 font-mono text-sm leading-relaxed">{output}</pre>{id === "color-converter" && <div className="mt-3 h-16 rounded-md border border-surface-variant" style={{ backgroundColor: input }} aria-label={`ตัวอย่างสี ${input}`} />}</section>}
-      </div>
-    </main>
-  );
+  return <ToolView slug={tool.slug} />;
 }
